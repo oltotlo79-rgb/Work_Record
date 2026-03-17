@@ -14,6 +14,7 @@ export default function MembersPage() {
   const [error, setError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [qrTarget, setQrTarget] = useState<Employee | null>(null);
+  const [loginId, setLoginId] = useState('');
 
   const fetchEmployees = async () => {
     try {
@@ -26,6 +27,8 @@ export default function MembersPage() {
 
   useEffect(() => {
     fetchEmployees();
+    const match = document.cookie.match(/(?:^|; )employee_number=([^;]*)/);
+    if (match) setLoginId(decodeURIComponent(match[1]));
   }, []);
 
   const handleEdit = (emp: Employee) => {
@@ -184,12 +187,14 @@ export default function MembersPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 sm:self-center">
-                      <button
-                        onClick={() => setQrTarget(emp)}
-                        className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 border-white/5"
-                      >
-                        QR
-                      </button>
+                      {emp.employee_number === loginId && (
+                        <button
+                          onClick={() => setQrTarget(emp)}
+                          className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 border-white/5"
+                        >
+                          QR
+                        </button>
+                      )}
                       <button
                         onClick={() => handleEdit(emp)}
                         className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-blue-400 hover:text-blue-300 border-white/5"
