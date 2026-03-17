@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import NfcWarning from '@/components/NfcWarning';
+import Image from 'next/image';
 
 export default function HomePage() {
   const router = useRouter();
@@ -11,63 +12,84 @@ export default function HomePage() {
     router.push('/login');
   };
 
+  const navItems = [
+    {
+      title: '打刻記録',
+      path: '/attendance',
+      icon: '/images/icons/attendance.png',
+      color: 'from-blue-500/20 to-blue-600/20',
+      border: 'border-blue-500/30'
+    },
+    {
+      title: 'メンバー登録',
+      path: '/register',
+      icon: '/images/icons/register.png',
+      color: 'from-emerald-500/20 to-emerald-600/20',
+      border: 'border-emerald-500/30'
+    },
+    {
+      title: 'メンバー一覧',
+      path: '/members',
+      icon: '/images/icons/members.png',
+      color: 'from-teal-500/20 to-teal-600/20',
+      border: 'border-teal-500/30'
+    },
+    {
+      title: '打刻確認',
+      path: '/records',
+      icon: '/images/icons/records.png',
+      color: 'from-purple-500/20 to-purple-600/20',
+      border: 'border-purple-500/30'
+    }
+  ];
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">打刻記録システム</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center p-6 sm:p-8">
+      <div className="w-full max-w-lg space-y-10">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
+            <span className="text-gradient">打刻記録システム</span>
+          </h1>
+          <p className="text-slate-400 font-medium">Smart Attendance Management</p>
         </div>
 
-        <NfcWarning />
-
-        <div className="space-y-3">
-          <button
-            onClick={() => router.push('/attendance')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white transition-colors hover:bg-blue-700"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            打刻記録
-          </button>
-
-          <button
-            onClick={() => router.push('/register')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-4 text-lg font-semibold text-white transition-colors hover:bg-green-700"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            メンバー登録
-          </button>
-
-          <button
-            onClick={() => router.push('/members')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-4 text-lg font-semibold text-white transition-colors hover:bg-teal-700"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            メンバー一覧
-          </button>
-
-          <button
-            onClick={() => router.push('/records')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-4 text-lg font-semibold text-white transition-colors hover:bg-purple-700"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            打刻確認
-          </button>
+        <div className="glass-panel rounded-3xl p-2">
+          <NfcWarning />
         </div>
 
-        <button
-          onClick={handleLogout}
-          className="w-full rounded-xl border border-gray-300 py-3 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
-        >
-          ログアウト
-        </button>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => router.push(item.path)}
+              className={`glass-card group flex flex-col items-center justify-center gap-4 rounded-3xl border ${item.border} bg-gradient-to-br ${item.color} p-6 sm:p-8 btn-premium`}
+            >
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                <Image
+                  src={item.icon}
+                  alt={item.title}
+                  fill
+                  className="object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                />
+              </div>
+              <span className="text-base font-bold text-white/90 sm:text-lg">
+                {item.title}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex justify-center pt-4">
+          <button
+            onClick={handleLogout}
+            className="group flex items-center gap-2 px-6 py-3 rounded-full glass-card text-sm font-semibold text-slate-300 hover:text-white border-white/5"
+          >
+            <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            ログアウト
+          </button>
+        </div>
       </div>
     </div>
   );

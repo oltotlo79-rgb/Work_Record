@@ -81,112 +81,132 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-4 pt-8">
-      <div className="w-full max-w-lg space-y-4">
+    <div className="flex min-h-screen flex-col items-center p-6 pt-12 sm:pt-16">
+      <div className="w-full max-w-2xl space-y-10">
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+            className="group glass-card rounded-2xl p-3 text-slate-400 hover:text-white border-white/5"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-6 w-6 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold">メンバー一覧</h1>
-          <div className="w-10" />
+          <h1 className="text-2xl font-bold tracking-tight text-gradient">メンバー一覧</h1>
+          <div className="w-12" />
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-50 p-3 text-center text-sm text-red-600">{error}</div>
+          <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-4 text-center text-sm text-red-400 animate-in fade-in slide-in-from-top-2 duration-300">
+            {error}
+          </div>
         )}
 
         {loading ? (
-          <div className="py-12 text-center text-gray-500">読み込み中...</div>
+          <div className="py-20 text-center space-y-4">
+            <svg className="mx-auto h-12 w-12 animate-spin text-blue-500/50" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <p className="text-slate-500 font-medium italic">Finding team members...</p>
+          </div>
         ) : employees.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">
-            <p className="text-sm">登録されたメンバーはいません</p>
+          <div className="glass-panel rounded-[2rem] p-20 text-center border-dashed border-white/10">
+            <div className="text-slate-600 mb-4 flex justify-center">
+              <svg className="h-16 w-16 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <p className="text-slate-400 font-medium">登録済みメンバーがありません</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-4">
             {employees.map((emp) => (
-              <div key={emp.id} className="rounded-xl border border-gray-200 bg-white p-4">
+              <div key={emp.id} className="glass-card rounded-[1.5rem] border-white/5 p-6 overflow-hidden">
                 {editingId === emp.id ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">従業員番号</label>
-                      <input
-                        type="text"
-                        value={editForm.employee_number}
-                        onChange={(e) => setEditForm({ ...editForm, employee_number: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                      />
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="ml-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Employee #</label>
+                        <input
+                          type="text"
+                          value={editForm.employee_number}
+                          onChange={(e) => setEditForm({ ...editForm, employee_number: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="ml-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Name</label>
+                        <input
+                          type="text"
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white focus:border-blue-500/50 focus:outline-none transition-all"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">氏名</label>
-                      <input
-                        type="text"
-                        value={editForm.name}
-                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-500">NFC UID</label>
+                    <div className="space-y-2">
+                      <label className="ml-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">NFC UID</label>
                       <input
                         type="text"
                         value={editForm.nfc_uid}
                         onChange={(e) => setEditForm({ ...editForm, nfc_uid: e.target.value.toUpperCase() })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:border-blue-500 focus:outline-none"
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-sm text-blue-400 focus:border-blue-500/50 focus:outline-none transition-all"
                       />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3 pt-2">
                       <button
                         onClick={() => handleSave(emp.id)}
-                        className="flex-1 rounded-lg bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        className="btn-premium flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-500"
                       >
                         保存
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        className="flex-1 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                        className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-slate-400 hover:text-white"
                       >
                         キャンセル
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">{emp.name}</p>
-                      <p className="text-sm text-gray-500">{emp.employee_number}</p>
-                      <p className="font-mono text-xs text-gray-400">{emp.nfc_uid}</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <p className="text-xl font-bold text-white">{emp.name}</p>
+                        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: {emp.employee_number}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                        <p className="font-mono text-xs text-slate-500 font-medium">UID: <span className="text-slate-400">{emp.nfc_uid}</span></p>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-3 sm:self-center">
                       <button
                         onClick={() => handleEdit(emp)}
-                        className="rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-100"
+                        className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-blue-400 hover:text-blue-300 border-white/5"
                       >
                         編集
                       </button>
                       {deleteConfirm === emp.id ? (
-                        <div className="flex gap-1">
+                        <div className="flex gap-2 animate-in slide-in-from-right-2 duration-300">
                           <button
                             onClick={() => handleDelete(emp.id)}
-                            className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                            className="rounded-xl bg-red-500 px-4 py-2 text-xs font-bold text-white hover:bg-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)]"
                           >
-                            確認
+                            確定
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                            className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-slate-400 border-white/5"
                           >
-                            戻す
+                            止める
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setDeleteConfirm(emp.id)}
-                          className="rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100"
+                          className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-red-400 hover:text-red-300 border-white/5"
                         >
                           削除
                         </button>

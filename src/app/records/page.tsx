@@ -116,38 +116,41 @@ export default function RecordsPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center px-4 pt-8">
-      <div className="w-full max-w-lg space-y-4">
+    <div className="flex min-h-screen flex-col items-center p-6 pt-12 sm:pt-16">
+      <div className="w-full max-w-2xl space-y-8">
         <div className="flex items-center justify-between">
           <button
             onClick={() => router.push('/')}
-            className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+            className="group glass-card rounded-2xl p-3 text-slate-400 hover:text-white border-white/5"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-6 w-6 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold">打刻確認</h1>
-          <div className="w-10" />
+          <h1 className="text-2xl font-bold tracking-tight text-gradient">打刻確認</h1>
+          <div className="w-12" />
         </div>
 
-        {/* Date selection */}
-        <div className="flex items-center justify-between rounded-xl bg-gray-50 p-3">
-          <span className="text-sm font-medium">
-            {isToday ? '今日' : selectedDate} の記録
-          </span>
-          <div className="flex gap-2">
+        {/* Date selection bar */}
+        <div className="glass-panel rounded-2xl p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`h-2 w-2 rounded-full ${isToday ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+            <span className="text-sm font-bold text-slate-200">
+              {isToday ? 'TODAY' : selectedDate}
+            </span>
+          </div>
+          <div className="flex gap-3">
             {!isToday && (
               <button
                 onClick={() => { setSelectedDate(getTodayStr()); setLoading(true); }}
-                className="rounded-lg bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                className="btn-premium rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white"
               >
-                今日に戻る
+                今日へ
               </button>
             )}
             <button
               onClick={() => setShowCalendar(!showCalendar)}
-              className="rounded-lg bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300"
+              className="glass-card rounded-xl px-4 py-2 text-xs font-bold text-slate-300 hover:text-white border-white/5"
             >
               日付選択
             </button>
@@ -155,81 +158,91 @@ export default function RecordsPage() {
         </div>
 
         {showCalendar && (
-          <CalendarPicker
-            onSelect={handleDateSelect}
-            onClose={() => setShowCalendar(false)}
-          />
+          <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+            <CalendarPicker
+              onSelect={handleDateSelect}
+              onClose={() => setShowCalendar(false)}
+            />
+          </div>
         )}
 
-        {/* Member controls */}
         <button
           onClick={() => setShowModal(true)}
-          className="w-full rounded-xl border-2 border-dashed border-gray-300 py-3 text-sm font-medium text-gray-500 transition-colors hover:border-blue-400 hover:text-blue-600"
+          className="btn-premium w-full rounded-2xl border-2 border-dashed border-white/10 bg-white/5 py-4 text-sm font-bold text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2 group"
         >
-          + 閲覧メンバー追加
+          <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          閲覧メンバー追加
         </button>
 
-        {/* Attendance table */}
+        {/* Attendance list/table */}
         {members.length === 0 ? (
-          <div className="py-12 text-center text-gray-400">
-            <p className="text-sm">閲覧メンバーが登録されていません</p>
-            <p className="text-xs mt-1">「閲覧メンバー追加」ボタンから追加してください</p>
+          <div className="glass-panel rounded-[2rem] p-20 text-center border-dashed border-white/10">
+            <p className="text-slate-500 font-medium">閲覧メンバーが登録されていません</p>
           </div>
         ) : loading ? (
-          <div className="py-8 text-center text-gray-500">読み込み中...</div>
+          <div className="py-20 text-center">
+            <svg className="mx-auto h-12 w-12 animate-spin text-blue-500" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-gray-200">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">氏名</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-600">始業</th>
-                  <th className="px-3 py-2 text-center font-medium text-gray-600">終業</th>
-                  <th className="px-2 py-2 w-8"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => {
-                  const record = getRecordForEmployee(member.target_employee_id);
-                  const clockInRed = shouldHighlightRed(member.target_employee_id, 'clock_in');
-                  const clockOutRed = shouldHighlightRed(member.target_employee_id, 'clock_out');
+          <div className="glass-card rounded-[1.5rem] border-white/5 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/5">
+                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Name</th>
+                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clock In</th>
+                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Clock Out</th>
+                    <th className="px-4 py-4 w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {members.map((member) => {
+                    const record = getRecordForEmployee(member.target_employee_id);
+                    const clockInRed = shouldHighlightRed(member.target_employee_id, 'clock_in');
+                    const clockOutRed = shouldHighlightRed(member.target_employee_id, 'clock_out');
 
-                  return (
-                    <tr key={member.id} className="border-t border-gray-100">
-                      <td className="px-3 py-3">
-                        <p className="font-medium">{member.employees.name}</p>
-                        <p className="text-xs text-gray-500">{member.employees.employee_number}</p>
-                      </td>
-                      <td
-                        className={`px-3 py-3 text-center font-mono ${
-                          clockInRed ? 'bg-red-100 text-red-700 font-bold' : ''
-                        }`}
-                      >
-                        {formatTime(record?.clock_in ?? null)}
-                      </td>
-                      <td
-                        className={`px-3 py-3 text-center font-mono ${
-                          clockOutRed ? 'bg-red-100 text-red-700 font-bold' : ''
-                        }`}
-                      >
-                        {formatTime(record?.clock_out ?? null)}
-                      </td>
-                      <td className="px-2 py-3">
-                        <button
-                          onClick={() => handleRemoveMember(member.id)}
-                          className="text-gray-400 hover:text-red-500"
-                          title="削除"
-                        >
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={member.id} className="group hover:bg-white/[0.02] transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-white">{member.employees.name}</p>
+                          <p className="text-[10px] font-bold text-slate-500 tracking-tighter uppercase">ID: {member.employees.employee_number}</p>
+                        </td>
+                        <td className={`px-6 py-4 text-center ${clockInRed ? 'animate-pulse' : ''}`}>
+                          <div className={`inline-block px-3 py-1 rounded-full font-mono font-bold transition-all ${
+                            clockInRed ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'text-slate-300'
+                          }`}>
+                            {formatTime(record?.clock_in ?? null)}
+                          </div>
+                        </td>
+                        <td className={`px-6 py-4 text-center ${clockOutRed ? 'animate-pulse' : ''}`}>
+                          <div className={`inline-block px-3 py-1 rounded-full font-mono font-bold transition-all ${
+                            clockOutRed ? 'bg-red-500/20 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'text-slate-300'
+                          }`}>
+                            {formatTime(record?.clock_out ?? null)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <button
+                            onClick={() => handleRemoveMember(member.id)}
+                            className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                            title="除外"
+                          >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
