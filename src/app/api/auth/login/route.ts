@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const response = NextResponse.json({ success: true });
   response.cookies.set('employee_number', trimmed, {
     path: '/',
-    httpOnly: true,
+    httpOnly: false,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 30, // 30 days
   });

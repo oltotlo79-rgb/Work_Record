@@ -1,58 +1,93 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Employee } from '@/types';
 
 interface MemberAddModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (employee: Employee) => void;
+  onDone: () => void;
   viewerId: string;
+  addedEmployeeIds: string[];
 }
 
-export default function MemberAddModal({ isOpen, onClose, onAdd, viewerId }: MemberAddModalProps) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Employee[]>([]);
+export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, addedEmployeeIds }: MemberAddModalProps) {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = async () => {
-    if (!query.trim()) return;
+  useEffect(() => {
+    if (!isOpen) return;
+    setSelected(new Set());
+    setError(null);
+    fetchEmployees();
+  }, [isOpen]);
+
+  const fetchEmployees = async () => {
     setLoading(true);
+    try {
+      const res = await fetch('/api/employees');
+      const data = await res.json();
+      if (res.ok) setEmployees(data);
+    } catch {
+      setError('メンバーの取得に失敗しました');
+    }
+    setLoading(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    if (selected.size === 0) {
+      onClose();
+      return;
+    }
+
+    setSaving(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/employees?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setResults(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '検索エラー');
-    } finally {
-      setLoading(false);
-    }
-  };
+      const promises = Array.from(selected).map((employeeId) =>
+        fetch('/api/viewing-members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            viewer_id: viewerId,
+            target_employee_id: employeeId,
+          }),
+        })
+      );
 
-  const handleAdd = async (employee: Employee) => {
-    try {
-      const res = await fetch('/api/viewing-members', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          viewer_id: viewerId,
-          target_employee_id: employee.id,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      onAdd(employee);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '追加エラー');
+      const results = await Promise.all(promises);
+      const failed = results.filter((r) => !r.ok && r.status !== 409);
+
+      if (failed.length > 0) {
+        setError(`${failed.length}件の追加に失敗しました`);
+      } else {
+        onDone();
+        onClose();
+      }
+    } catch {
+      setError('追加に失敗しました');
     }
+    setSaving(false);
   };
 
   if (!isOpen) return null;
+
+  const availableEmployees = employees.filter((e) => !addedEmployeeIds.includes(e.id));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -66,51 +101,56 @@ export default function MemberAddModal({ isOpen, onClose, onAdd, viewerId }: Mem
           </button>
         </div>
 
-        <div className="mb-4 flex gap-2">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="従業員番号または氏名"
-            className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400"
-          >
-            検索
-          </button>
-        </div>
-
         {error && (
           <div className="mb-3 rounded-lg bg-red-50 p-2 text-sm text-red-600">{error}</div>
         )}
 
-        <div className="max-h-60 overflow-y-auto">
-          {results.length === 0 && !loading && (
-            <p className="py-4 text-center text-sm text-gray-500">
-              従業員を検索してください
-            </p>
-          )}
-          {results.map((emp) => (
-            <div
-              key={emp.id}
-              className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
-            >
-              <div>
-                <p className="text-sm font-medium">{emp.name}</p>
-                <p className="text-xs text-gray-500">{emp.employee_number}</p>
-              </div>
-              <button
-                onClick={() => handleAdd(emp)}
-                className="rounded-lg bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
-              >
-                追加
-              </button>
+        <div className="max-h-80 overflow-y-auto">
+          {loading ? (
+            <div className="py-8 text-center text-gray-500">読み込み中...</div>
+          ) : availableEmployees.length === 0 ? (
+            <div className="py-8 text-center text-gray-400">
+              <p className="text-sm">追加できるメンバーがいません</p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-1">
+              {availableEmployees.map((emp) => (
+                <label
+                  key={emp.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 transition-colors ${
+                    selected.has(emp.id) ? 'bg-blue-50' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.has(emp.id)}
+                    onChange={() => toggleSelect(emp.id)}
+                    className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <p className="text-sm font-medium">{emp.name}</p>
+                    <p className="text-xs text-gray-500">{emp.employee_number}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saving || selected.size === 0}
+            className="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:bg-blue-400"
+          >
+            {saving ? '追加中...' : `${selected.size}件追加する`}
+          </button>
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          >
+            キャンセル
+          </button>
         </div>
       </div>
     </div>

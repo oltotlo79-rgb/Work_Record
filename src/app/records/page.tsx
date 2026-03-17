@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import MemberAddModal from '@/components/MemberAddModal';
 import CalendarPicker from '@/components/CalendarPicker';
-import type { Employee, AttendanceWithEmployee } from '@/types';
+import type { AttendanceWithEmployee } from '@/types';
+import type { Employee } from '@/types';
 
 interface ViewingMemberWithEmployee {
   id: string;
@@ -85,9 +86,8 @@ export default function RecordsPage() {
     fetchRecords();
   }, [members, selectedDate, fetchRecords]);
 
-  const handleAddMember = (employee: Employee) => {
+  const handleMembersDone = () => {
     fetchMembers();
-    void employee;
   };
 
   const handleRemoveMember = async (id: string) => {
@@ -237,8 +237,9 @@ export default function RecordsPage() {
       <MemberAddModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onAdd={handleAddMember}
+        onDone={handleMembersDone}
         viewerId={viewerId}
+        addedEmployeeIds={members.map((m) => m.target_employee_id)}
       />
     </div>
   );
