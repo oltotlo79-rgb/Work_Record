@@ -18,6 +18,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let scanner: any = null;
+    let isRunning = false;
 
     const initScanner = async () => {
       const { Html5Qrcode } = await import('html5-qrcode');
@@ -37,6 +38,7 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
           },
           () => {}
         );
+        isRunning = true;
         setInitialized(true);
       } catch (err) {
         onError?.(err instanceof Error ? err.message : 'カメラの起動に失敗しました');
@@ -46,9 +48,10 @@ export default function QrScanner({ onScan, onError, active = true }: QrScannerP
     initScanner();
 
     return () => {
-      if (scanner) {
-        scanner.stop().catch(() => {});
-        scanner.clear().catch(() => {});
+      if (scanner && isRunning) {
+        scanner.stop().then(() => {
+          scanner.clear();
+        }).catch(() => {});
       }
       setInitialized(false);
     };
