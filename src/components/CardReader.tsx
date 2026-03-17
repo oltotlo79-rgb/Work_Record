@@ -34,8 +34,8 @@ export default function CardReader({ onRead, active = true }: CardReaderProps) {
         <NfcReader onRead={onRead} onError={setError} />
       ) : (
         <div>
-          <p className="mb-3 text-center text-sm text-amber-600">
-            NFC非対応デバイスのため、QRコードスキャナーで読み取ります
+          <p className="mb-4 text-center text-xs font-bold text-amber-500/80 uppercase tracking-wider">
+            NFC非対応 — QRコードモード
           </p>
           {active && <QrScanner onScan={onRead} onError={setError} />}
         </div>
