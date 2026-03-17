@@ -53,9 +53,7 @@ export default function HomePage() {
           <p className="text-slate-400 font-medium">Smart Attendance Management</p>
         </div>
 
-        <div className="glass-panel rounded-3xl p-2">
-          <NfcWarning />
-        </div>
+        <NfcWarning />
 
         <div className="grid grid-cols-2 gap-4 sm:gap-6">
           {navItems.map((item) => (
