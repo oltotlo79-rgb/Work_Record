@@ -1,5 +1,5 @@
 {
-  "name": "work-record-temp",
+  "name": "work-record",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,13 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.99.2",
+    "html5-qrcode": "^2.3.8",
     "next": "16.1.7",
+    "qrcode": "^1.5.4",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
