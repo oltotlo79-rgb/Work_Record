@@ -32,7 +32,7 @@ const html = `<!DOCTYPE html>
   .cover {
     background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
     color: #fff;
-    padding: 48px 64px 40px;
+    padding: 36px 64px 40px;
     margin-bottom: 40px;
     border-radius: 0 0 24px 24px;
     position: relative;
@@ -229,7 +229,6 @@ const html = `<!DOCTYPE html>
   /* ページ設定 */
   @page {
     size: A4;
-    margin: 0;
   }
 </style>
 </head>
@@ -268,14 +267,13 @@ await page.pdf({
   path: outPath,
   format: 'A4',
   printBackground: true,
-  margin: { top: '12mm', bottom: '28mm', left: 0, right: 0 },
+  margin: { top: '15mm', bottom: '18mm', left: '0', right: '0' },
   displayHeaderFooter: true,
-  headerTemplate: '<div></div>',
-  footerTemplate: `
-    <div style="width:100%;padding:0 64px;font-size:8pt;color:#94a3b8;display:flex;justify-content:space-between;font-family:sans-serif;">
-      <span>打刻記録システム 要件定義書</span>
-      <span><span class="pageNumber"></span> / <span class="totalPages"></span></span>
-    </div>`,
+  headerTemplate: '<div style="font-size:0;"></div>',
+  footerTemplate: `<div style="width:100%;padding:0 64px 6mm;font-size:8pt;color:#94a3b8;display:flex;justify-content:space-between;font-family:sans-serif;box-sizing:border-box;">
+    <span>打刻記録システム 要件定義書</span>
+    <span><span class="pageNumber"></span> / <span class="totalPages"></span></span>
+  </div>`,
 });
 
 await browser.close();
