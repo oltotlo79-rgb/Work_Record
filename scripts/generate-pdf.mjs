@@ -99,7 +99,7 @@ const html = `<!DOCTYPE html>
   }
 
   .content {
-    padding: 0 64px 64px;
+    padding: 0 64px 80px;
   }
 
   /* 見出し */
@@ -268,7 +268,7 @@ await page.pdf({
   path: outPath,
   format: 'A4',
   printBackground: true,
-  margin: { top: '12mm', bottom: '20mm', left: 0, right: 0 },
+  margin: { top: '12mm', bottom: '28mm', left: 0, right: 0 },
   displayHeaderFooter: true,
   headerTemplate: '<div></div>',
   footerTemplate: `
