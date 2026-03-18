@@ -3,15 +3,20 @@
 import { useState, useEffect } from 'react';
 import type { Employee } from '@/types';
 
+interface AddedMember {
+  viewingMemberId: string;
+  employeeId: string;
+}
+
 interface MemberAddModalProps {
   isOpen: boolean;
   onClose: () => void;
   onDone: () => void;
   viewerId: string;
-  addedEmployeeIds: string[];
+  addedMembers: AddedMember[];
 }
 
-export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, addedEmployeeIds }: MemberAddModalProps) {
+export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, addedMembers }: MemberAddModalProps) {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -20,7 +25,8 @@ export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, adde
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelected(new Set());
+    // 追加済みをチェック済みとして初期化
+    setSelected(new Set(addedMembers.map((m) => m.employeeId)));
     setError(null);
     fetchEmployees();
   }, [isOpen]);
@@ -40,66 +46,65 @@ export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, adde
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
 
   const handleSave = async () => {
-    if (selected.size === 0) {
-      onClose();
-      return;
-    }
-
     setSaving(true);
     setError(null);
 
+    const addedIds = new Set(addedMembers.map((m) => m.employeeId));
+
+    // 新規追加: 今チェックされているが追加済みでないもの
+    const toAdd = Array.from(selected).filter((id) => !addedIds.has(id));
+    // 削除: 追加済みだが今チェックが外れているもの
+    const toRemove = addedMembers.filter((m) => !selected.has(m.employeeId));
+
     try {
-      const promises = Array.from(selected).map((employeeId) =>
+      const addPromises = toAdd.map((employeeId) =>
         fetch('/api/viewing-members', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            viewer_id: viewerId,
-            target_employee_id: employeeId,
-          }),
+          body: JSON.stringify({ viewer_id: viewerId, target_employee_id: employeeId }),
         })
       );
+      const removePromises = toRemove.map((m) =>
+        fetch(`/api/viewing-members?id=${m.viewingMemberId}`, { method: 'DELETE' })
+      );
 
-      const results = await Promise.all(promises);
+      const results = await Promise.all([...addPromises, ...removePromises]);
       const failed = results.filter((r) => !r.ok && r.status !== 409);
 
       if (failed.length > 0) {
-        setError(`${failed.length}件の追加に失敗しました`);
+        setError(`${failed.length}件の操作に失敗しました`);
       } else {
         onDone();
         onClose();
       }
     } catch {
-      setError('追加に失敗しました');
+      setError('保存に失敗しました');
     }
     setSaving(false);
   };
 
   if (!isOpen) return null;
 
-  const availableEmployees = employees.filter((e) => !addedEmployeeIds.includes(e.id));
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="glass-panel w-full max-w-md rounded-3xl p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-white">閲覧メンバー追加</h3>
+          <h3 className="text-lg font-bold text-white">閲覧メンバー管理</h3>
           <button onClick={onClose} className="glass-card rounded-xl p-2 text-slate-400 hover:text-white border-white/5">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
+
+        <p className="text-xs text-slate-500">チェックを入れると表示・外すと非表示になります</p>
 
         {error && (
           <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">{error}</div>
@@ -108,12 +113,12 @@ export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, adde
         <div className="max-h-80 overflow-y-auto space-y-1 pr-1">
           {loading ? (
             <div className="py-8 text-center text-slate-500">読み込み中...</div>
-          ) : availableEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <div className="py-8 text-center text-slate-500">
-              <p className="text-sm">追加できるメンバーがいません</p>
+              <p className="text-sm">登録されたメンバーがいません</p>
             </div>
           ) : (
-            availableEmployees.map((emp) => (
+            employees.map((emp) => (
               <label
                 key={emp.id}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 transition-colors ${
@@ -138,10 +143,10 @@ export default function MemberAddModal({ isOpen, onClose, onDone, viewerId, adde
         <div className="flex gap-3 pt-2">
           <button
             onClick={handleSave}
-            disabled={saving || selected.size === 0}
+            disabled={saving}
             className="btn-premium flex-1 rounded-2xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-40"
           >
-            {saving ? '追加中...' : `${selected.size}件追加する`}
+            {saving ? '保存中...' : '保存する'}
           </button>
           <button
             onClick={onClose}

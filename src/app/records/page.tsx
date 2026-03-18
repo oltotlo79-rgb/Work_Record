@@ -252,7 +252,7 @@ export default function RecordsPage() {
         onClose={() => setShowModal(false)}
         onDone={handleMembersDone}
         viewerId={viewerId}
-        addedEmployeeIds={members.map((m) => m.target_employee_id)}
+        addedMembers={members.map((m) => ({ viewingMemberId: m.id, employeeId: m.target_employee_id }))}
       />
     </div>
   );
