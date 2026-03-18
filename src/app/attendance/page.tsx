@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ToggleSwitch from '@/components/ToggleSwitch';
 import CardReader from '@/components/CardReader';
 import type { Employee } from '@/types';
+
+function getTodayStr(): string {
+  const now = new Date();
+  const jst = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+  return `${jst.getFullYear()}-${String(jst.getMonth() + 1).padStart(2, '0')}-${String(jst.getDate()).padStart(2, '0')}`;
+}
 
 export default function AttendancePage() {
   const router = useRouter();
@@ -15,6 +21,28 @@ export default function AttendancePage() {
     employee?: Employee;
   }>({ type: 'idle', message: '' });
   const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      const match = document.cookie.match(/(?:^|; )employee_number=([^;]*)/);
+      const employeeNumber = match ? decodeURIComponent(match[1]) : '';
+      if (!employeeNumber || employeeNumber === 'admin') return;
+
+      try {
+        const empRes = await fetch(`/api/employees?q=${encodeURIComponent(employeeNumber)}`);
+        const empList = await empRes.json();
+        const emp = empList.find((e: Employee) => e.employee_number === employeeNumber);
+        if (!emp) return;
+
+        const attRes = await fetch(`/api/attendance?employee_ids=${emp.id}&date=${getTodayStr()}`);
+        const attList = await attRes.json();
+        if (attList.length > 0 && attList[0].clock_in) {
+          setType('clock_out');
+        }
+      } catch { /* ignore */ }
+    };
+    init();
+  }, []);
 
   const handleRead = useCallback(async (uid: string) => {
     if (processing) return;
