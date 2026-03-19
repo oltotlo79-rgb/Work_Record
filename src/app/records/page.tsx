@@ -46,37 +46,83 @@ export default function RecordsPage() {
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [viewerId, setViewerId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selfEmployee, setSelfEmployee] = useState<Employee | null>(null);
 
   const isToday = selectedDate === getTodayStr();
+  const isAdmin = viewerId === 'admin';
+
+  // 自分自身 + viewing_members を結合した表示用リスト
+  const allDisplayMembers: { id: string; target_employee_id: string; employees: Pick<Employee, 'id' | 'employee_number' | 'name'>; isSelf?: boolean }[] = (() => {
+    const result: typeof allDisplayMembers = [];
+    // 自分を先頭に追加
+    if (selfEmployee && !members.some((m) => m.target_employee_id === selfEmployee.id)) {
+      result.push({
+        id: `self-${selfEmployee.id}`,
+        target_employee_id: selfEmployee.id,
+        employees: { id: selfEmployee.id, employee_number: selfEmployee.employee_number, name: selfEmployee.name },
+        isSelf: true,
+      });
+    }
+    result.push(...members.map((m) => ({ ...m, isSelf: m.target_employee_id === selfEmployee?.id })));
+    return result;
+  })();
 
   useEffect(() => {
     setViewerId(getViewerId());
   }, []);
 
+  // 非admin: 自分の従業員情報を取得
+  useEffect(() => {
+    if (!viewerId || isAdmin) return;
+    const fetchSelf = async () => {
+      try {
+        const res = await fetch(`/api/employees?q=${encodeURIComponent(viewerId)}`);
+        const data = await res.json();
+        if (res.ok && Array.isArray(data)) {
+          const me = data.find((e: Employee) => e.employee_number === viewerId);
+          if (me) setSelfEmployee(me);
+        }
+      } catch { /* ignore */ }
+    };
+    fetchSelf();
+  }, [viewerId, isAdmin]);
+
   const fetchMembers = useCallback(async () => {
-    if (!viewerId) return;
+    if (!viewerId || isAdmin) return;
     try {
       const res = await fetch(`/api/viewing-members?viewer_id=${encodeURIComponent(viewerId)}`);
       const data = await res.json();
       if (res.ok) setMembers(data);
     } catch { /* ignore */ }
-  }, [viewerId]);
+  }, [viewerId, isAdmin]);
 
   const fetchRecords = useCallback(async () => {
-    if (members.length === 0) {
+    if (isAdmin) {
       setRecords([]);
       setLoading(false);
       return;
     }
 
-    const ids = members.map((m) => m.target_employee_id).join(',');
+    // 自分のIDも含めて取得
+    const memberIds = members.map((m) => m.target_employee_id);
+    if (selfEmployee && !memberIds.includes(selfEmployee.id)) {
+      memberIds.unshift(selfEmployee.id);
+    }
+
+    if (memberIds.length === 0) {
+      setRecords([]);
+      setLoading(false);
+      return;
+    }
+
+    const ids = memberIds.join(',');
     try {
       const res = await fetch(`/api/attendance?employee_ids=${ids}&date=${selectedDate}`);
       const data = await res.json();
       if (res.ok) setRecords(data);
     } catch { /* ignore */ }
     setLoading(false);
-  }, [members, selectedDate]);
+  }, [members, selectedDate, isAdmin, selfEmployee]);
 
   useEffect(() => {
     if (viewerId) fetchMembers();
@@ -84,7 +130,7 @@ export default function RecordsPage() {
 
   useEffect(() => {
     fetchRecords();
-  }, [members, selectedDate, fetchRecords]);
+  }, [members, selectedDate, selfEmployee, fetchRecords]);
 
   const handleMembersDone = () => {
     fetchMembers();
@@ -166,18 +212,31 @@ export default function RecordsPage() {
           </div>
         )}
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn-premium w-full rounded-2xl border-2 border-dashed border-white/10 bg-white/5 py-4 text-sm font-bold text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2 group"
-        >
-          <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          閲覧メンバー追加
-        </button>
+        {isAdmin ? (
+          <div className="glass-panel rounded-[2rem] p-10 text-center border-dashed border-amber-500/20 space-y-4">
+            <div className="flex justify-center">
+              <svg className="h-12 w-12 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-amber-400 font-bold text-sm">自身の従業員番号でログインしメンバーを追加することで打刻情報が見れるようになります。</p>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-premium w-full rounded-2xl border-2 border-dashed border-white/10 bg-white/5 py-4 text-sm font-bold text-slate-400 hover:text-blue-400 hover:border-blue-500/30 transition-all flex items-center justify-center gap-2 group"
+            >
+              <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              閲覧メンバー追加
+            </button>
+          </>
+        )}
 
         {/* Attendance list/table */}
-        {members.length === 0 ? (
+        {isAdmin ? null : allDisplayMembers.length === 0 ? (
           <div className="glass-panel rounded-[2rem] p-20 text-center border-dashed border-white/10">
             <p className="text-slate-500 font-medium">閲覧メンバーが登録されていません</p>
           </div>
@@ -201,7 +260,7 @@ export default function RecordsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {members.map((member) => {
+                  {allDisplayMembers.map((member) => {
                     const record = getRecordForEmployee(member.target_employee_id);
                     const clockInRed = shouldHighlightRed(member.target_employee_id, 'clock_in');
                     const clockOutRed = shouldHighlightRed(member.target_employee_id, 'clock_out');
@@ -209,7 +268,7 @@ export default function RecordsPage() {
                     return (
                       <tr key={member.id} className="group hover:bg-white/[0.02] transition-colors">
                         <td className="px-6 py-4">
-                          <p className="font-bold text-white">{member.employees.name}</p>
+                          <p className="font-bold text-white">{member.employees.name}{member.isSelf ? <span className="ml-1 text-[10px] text-blue-400">(自分)</span> : ''}</p>
                           <p className="text-[10px] font-bold text-slate-500 tracking-tighter uppercase">ID: {member.employees.employee_number}</p>
                         </td>
                         <td className={`px-6 py-4 text-center ${clockInRed ? 'animate-pulse' : ''}`}>
@@ -227,15 +286,17 @@ export default function RecordsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-4">
-                          <button
-                            onClick={() => handleRemoveMember(member.id)}
-                            className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                            title="除外"
-                          >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          {!member.isSelf && (
+                            <button
+                              onClick={() => handleRemoveMember(member.id)}
+                              className="p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              title="除外"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -247,13 +308,15 @@ export default function RecordsPage() {
         )}
       </div>
 
-      <MemberAddModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onDone={handleMembersDone}
-        viewerId={viewerId}
-        addedMembers={members.map((m) => ({ viewingMemberId: m.id, employeeId: m.target_employee_id }))}
-      />
+      {!isAdmin && (
+        <MemberAddModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onDone={handleMembersDone}
+          viewerId={viewerId}
+          addedMembers={members.map((m) => ({ viewingMemberId: m.id, employeeId: m.target_employee_id }))}
+        />
+      )}
     </div>
   );
 }

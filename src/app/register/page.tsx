@@ -44,6 +44,18 @@ export default function RegisterPage() {
       }
 
       setRegistered(data);
+
+      // adminでログイン中の場合、登録した従業員番号でログインし直すよう促す
+      const viewerId = document.cookie.match(/(?:^|; )employee_number=([^;]*)/);
+      const currentUser = viewerId ? decodeURIComponent(viewerId[1]) : '';
+      if (currentUser === 'admin') {
+        const ok = window.confirm('登録した従業員番号でログインし直してください。');
+        if (ok) {
+          await fetch('/api/auth/login', { method: 'DELETE' });
+          router.push('/login');
+          return;
+        }
+      }
     } catch {
       setError('登録に失敗しました');
     } finally {
