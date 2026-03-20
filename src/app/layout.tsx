@@ -24,6 +24,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              /* FOUC防止: CSSロード前の最低限スタイル */
+              html { background: #020617; }
+              body { background: #020617; color: #f8fafc; opacity: 0; }
+              body.ready { opacity: 1; transition: opacity 0.15s ease-in; }
+            `,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // CSS読み込み完了後にbodyを表示
+              (function() {
+                function show() { document.body.classList.add('ready'); }
+                if (document.readyState === 'complete') { show(); }
+                else { window.addEventListener('load', show); }
+                // フォールバック: 最大1.5秒後には必ず表示
+                setTimeout(show, 1500);
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
