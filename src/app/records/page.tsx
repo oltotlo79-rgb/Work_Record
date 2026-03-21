@@ -267,7 +267,7 @@ export default function RecordsPage() {
 
                     return (
                       <tr key={member.id} className="group hover:bg-white/[0.02] transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 whitespace-nowrap">
                           <p className="font-bold text-white">{member.employees.name}{member.isSelf ? <span className="ml-1 text-[10px] text-blue-400">(自分)</span> : ''}</p>
                           <p className="text-[10px] font-bold text-slate-500 tracking-tighter uppercase">ID: {member.employees.employee_number}</p>
                         </td>
