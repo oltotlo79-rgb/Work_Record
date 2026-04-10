@@ -81,7 +81,7 @@ export default function CalendarPicker({ onSelect, onClose }: CalendarPickerProp
               key={day}
               onClick={() => handleSelect(day)}
               className={`rounded-lg py-2 text-center text-sm transition-colors hover:bg-blue-100 ${
-                isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : ''
+                isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-700'
               }`}
             >
               {day}
