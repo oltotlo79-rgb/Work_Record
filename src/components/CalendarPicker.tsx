@@ -40,7 +40,7 @@ export default function CalendarPicker({ onSelect, onClose }: CalendarPickerProp
   };
 
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-lg border border-gray-200">
+    <div className="rounded-2xl bg-white p-4 shadow-lg border border-gray-200 text-gray-800">
       <div className="mb-3 flex items-center justify-between">
         <button onClick={handlePrev} className="rounded-lg p-2 hover:bg-gray-100">
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
